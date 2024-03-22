@@ -1,13 +1,13 @@
-#include<opencv2/core.hpp>
-#include<opencv2/imgproc.hpp>
-#include<opencv2/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
-#include<iostream>
+#include <iostream>
 
 #define USER 'O' // we will be playing as O
 #define AI 'X' // AI as X
 
-char TTTBoard[3][3];
+char TTTBoard[3][3]; // TicTacToeBoard
 
 cv::Mat drawBoard() {
 	cv::Mat board(300, 300, CV_8U, cv::Scalar(0));
@@ -26,11 +26,10 @@ cv::Mat drawBoard() {
 
 // only play if moves are left
 bool areMovesLeft() {
-	for (int i = 0; i < 3; ++i) {
-		for (int j = 0; j < 3; ++j) {
+	for (int i = 0; i < 3; ++i) 
+		for (int j = 0; j < 3; ++j) 
 			if (TTTBoard[i][j] == '.') return true;
-		}
-	}
+		
 	return false;
 }
 
@@ -38,6 +37,7 @@ bool areMovesLeft() {
 int evalBoard() {
 	// return 1 if USER wins. 
 	// return -1 if AI wins.
+	// return 0 otherwise
 
 	// if there is a row of same letters.
 	for (int row = 0; row < 3; ++row) {
@@ -56,11 +56,13 @@ int evalBoard() {
 	}
 
 	// diagonals.
+	// upper right
 	if (TTTBoard[0][0] == TTTBoard[1][1] && TTTBoard[1][1] == TTTBoard[2][2]) {
 		if (TTTBoard[0][0] == USER) return 1;
 		else if (TTTBoard[0][0] == AI) return -1;
 	}
 
+	// upper left
 	if (TTTBoard[0][2] == TTTBoard[1][1] && TTTBoard[1][1] == TTTBoard[2][0]) {
 		if (TTTBoard[0][2] == USER) return 1;
 		else if (TTTBoard[0][2] == AI) return -1;
@@ -73,11 +75,10 @@ int evalBoard() {
 int minimax(bool isMax) {
 	int score = evalBoard();
 	
+	// won / lost
 	if (score != 0) {
 		return score;
 	}
-
-
 	// tie
 	if (areMovesLeft() == false)
 		return 0;
@@ -153,6 +154,7 @@ void AIMove(cv::Mat board) {
 		}
 	}
 
+	// = -1 means no valid move found.
 	if (bestX != -1) {
 		// print move
 		TTTBoard[bestX][bestY] = AI;
@@ -166,7 +168,9 @@ void AIMove(cv::Mat board) {
 // mousecallback for drawing when user clicks in a box
 void callBackFunc(int event, int x, int y, int flags, void* userdata) {
 	cv::Mat board = static_cast<cv::Mat*>(userdata)[0];
-	if (event == cv::EVENT_LBUTTONDOWN) {
+
+
+	if (event == cv::EVENT_LBUTTONDOWN && evalBoard() == 0) { // left click and not won / lost
 		int rowIdx = x / 100; // 0, 1, 2
 		int colIdx = y / 100; // 0, 1, 2
 
@@ -177,8 +181,9 @@ void callBackFunc(int event, int x, int y, int flags, void* userdata) {
 			txt.push_back(USER);
 			cv::putText(board, txt, cv::Point(rowIdx * 100, colIdx * 100 + 100), cv::FONT_HERSHEY_COMPLEX, 3, cv::Scalar(255, 255, 255));
 
-			// terminate if won.
 			cv::imshow("board", board);
+
+			// terminate if won.
 			if (evalBoard() > 0) {
 				printf("\nWON."); 
 				return;
@@ -210,13 +215,14 @@ int main() {
 
 	// to be called when user clicks on a screen section
 	cv::setMouseCallback("board", callBackFunc, &board);
-	cv::imshow("board", board);
 
 	// terminate if key pressed.
-	int k = cv::waitKey(0);
-	if (k == 'q' || k == 'Q') {
-		cv::destroyAllWindows();
-	}
+	int k;
+	do{
+		cv::imshow("board", board);
+		k = cv::waitKey(0);
+	}while(k != 'Q' && k != 'q');
+	
 
 	return 0;
 }

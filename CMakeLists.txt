@@ -5,7 +5,7 @@ project(TICTACTOE)
 set(WITH_CUDA OFF)
 find_package(OpenCV REQUIRED)
 
-set(SOURCES src/main.cpp)
+set(SOURCES src/minimax.cpp)
 
 add_executable(main ${SOURCES})
 
